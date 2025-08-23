@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface OperationRepository extends JpaRepository<Operations, Long>, JpaSpecificationExecutor<Operations> {
     @Query("""
@@ -34,4 +36,23 @@ public interface OperationRepository extends JpaRepository<Operations, Long>, Jp
                                                  @Param("distanceStart") Double distanceStart,
                                                  @Param("distanceEnd") Double distanceEnd,
                                                  Pageable pageable);
+
+    @Query("""
+            SELECT new com.vehicle.suggestion.app.dto.OperationSearchResult(
+              o.id, o.brand, o.model, o.engine, o.yearStart, o.yearEnd,
+                o.distanceStart, o.distanceEnd, o.name, o.approxCost, o.description, o.time)
+            FROM Operations o
+            WHERE (:brand IS NULL OR LOWER(o.brand) LIKE LOWER(CONCAT('%', :brand, '%')))
+              AND (:model IS NULL OR LOWER(o.model) LIKE LOWER(CONCAT('%', :model, '%')))
+              AND (:engine IS NULL OR LOWER(o.engine) = LOWER(:engine))
+              AND (:makeYear IS NULL OR :makeYear BETWEEN o.yearStart AND o.yearEnd)
+              ORDER BY o.approxCost ASC    
+    """)
+    List<OperationSearchResult> suggestOperations(
+            @Param("brand") String brand,
+            @Param("model") String model,
+            @Param("engine") String engine,
+            @Param("makeYear") Integer makeYear
+    );
+
 }

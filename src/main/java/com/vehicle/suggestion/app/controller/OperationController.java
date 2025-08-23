@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/operation")
 @Validated
@@ -57,5 +59,17 @@ public class OperationController {
         var result = operationService.searchOperation(request, unit, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(result, "Success"));
     }
+
+    @GetMapping("/suggest")
+    @Operation(summary = "Suggest operation based on various criteria")
+    @Tag(name = "Operation API")
+    public ResponseEntity<ApiResponse<List<OperationResponse>>> suggestOperations(
+            OperationSuggestRequest request,
+            @RequestParam(defaultValue = "km") String unit
+    ) {
+        var suggestions = operationService.suggestOperations(request, unit);
+        return ResponseEntity.ok(ApiResponse.success(suggestions, "Success"));
+    }
+
 
 }

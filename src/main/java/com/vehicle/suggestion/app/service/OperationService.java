@@ -11,7 +11,11 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OperationService {
@@ -92,6 +96,59 @@ public class OperationService {
                 .pageable(queryResult.getPageable()).build();
     }
 
+    public List<OperationResponse> suggestOperations(OperationSuggestRequest request, String unit) {
+        Double convertedTotalDistance = convertDistanceIfMilesToMiles(request.getTotalDistance(), unit);
+
+        var queryResult = operationRepository.suggestOperations(
+                request.getBrand(),
+                request.getModel(),
+                request.getEngine(),
+                request.getMakeYear());
+
+        List<OperationSearchResult> suggestedList;
+        if (convertedTotalDistance == null) {
+            suggestedList = queryResult;
+        } else {
+            // find between ranges
+            suggestedList = queryResult.stream()
+                    .filter(op -> convertedTotalDistance >= op.getDistanceStart() && convertedTotalDistance <= op.getDistanceEnd())
+                    .collect(Collectors.toList());
+
+            if (suggestedList.isEmpty() && !queryResult.isEmpty()) {
+                // find the closest lower and higher ranges
+                OperationSearchResult lower = queryResult.stream()
+                        .filter(op -> op.getDistanceEnd() < convertedTotalDistance)
+                        .max(Comparator.comparing(OperationSearchResult::getDistanceEnd))
+                        .orElse(null);
+
+                OperationSearchResult higher = queryResult.stream()
+                        .filter(op -> op.getDistanceStart() > convertedTotalDistance)
+                        .min(Comparator.comparing(OperationSearchResult::getDistanceStart))
+                        .orElse(null);
+
+                suggestedList = new ArrayList<>();
+                if (lower != null) suggestedList.add(lower);
+                if (higher != null) suggestedList.add(higher);
+
+                // if distance is outside all ranges (too low or too high), pick the closest one
+                if (suggestedList.isEmpty()) {
+                    OperationSearchResult closest = queryResult.stream()
+                            .min(Comparator.comparing(op -> Math.min(
+                                    Math.abs(convertedTotalDistance - op.getDistanceStart()),
+                                    Math.abs(convertedTotalDistance - op.getDistanceEnd())
+                            )))
+                            .get();
+                    suggestedList.add(closest);
+                }
+            }
+        }
+
+        return suggestedList.stream()
+                .map(op -> new OperationResponse(op, unit))
+                .sorted(Comparator.comparing(OperationResponse::getApproxCost))
+                .toList();
+    }
+
     private Double convertDistanceIfMilesToMiles(Double distance, String unit) {
         if (distance == null) {
             return null;
@@ -104,4 +161,6 @@ public class OperationService {
         }
         return DistanceUnit.MILES.getValue().equalsIgnoreCase(unit) ? DistanceConversionUtil.toKm(distance) : distance;
     }
+
+
 }
