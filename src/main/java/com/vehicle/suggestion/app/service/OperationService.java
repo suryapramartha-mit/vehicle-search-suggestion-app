@@ -1,11 +1,14 @@
 package com.vehicle.suggestion.app.service;
 
 import com.vehicle.suggestion.app.dto.CreateOperationRequest;
+import com.vehicle.suggestion.app.dto.UpdateOperationRequest;
 import com.vehicle.suggestion.app.entity.Operations;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class OperationService {
@@ -35,5 +38,22 @@ public class OperationService {
                 .time(request.getTime())
                 .name(request.getName())
                 .build());
+    }
+
+    public Operations updateOperation(Long id, UpdateOperationRequest request) {
+        Operations existingOperation = operationRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("Operation not found with id: " + id));
+
+        // Update only fields that are provided
+        Optional.ofNullable(request.getName()).ifPresent(existingOperation::setName);
+        Optional.ofNullable(request.getApproxCost()).ifPresent(existingOperation::setApproxCost);
+        Optional.ofNullable(request.getDescription()).ifPresent(existingOperation::setDescription);
+        Optional.ofNullable(request.getTime()).ifPresent(existingOperation::setTime);
+        Optional.ofNullable(request.getDistanceStart()).ifPresent(existingOperation::setDistanceStart);
+        Optional.ofNullable(request.getDistanceEnd()).ifPresent(existingOperation::setDistanceEnd);
+        Optional.ofNullable(request.getYearStart()).ifPresent(existingOperation::setYearStart);
+        Optional.ofNullable(request.getYearEnd()).ifPresent(existingOperation::setYearEnd);
+
+        return operationRepository.save(existingOperation);
     }
 }
