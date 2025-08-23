@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class CreateOperationResponse {
+public class OperationResponse {
     private final Long id;
     private final String brand;
     private final String model;
@@ -22,7 +22,7 @@ public class CreateOperationResponse {
     private final String description;
     private final Integer time;
 
-    public CreateOperationResponse(Operations newOperation, String unit) {
+    public OperationResponse(Operations newOperation, String unit) {
         this.id = newOperation.getId();
         this.brand = newOperation.getBrand();
         this.model = newOperation.getModel();
@@ -40,6 +40,27 @@ public class CreateOperationResponse {
         } else {
             this.distanceEnd = newOperation.getDistanceEnd();
             this.distanceStart = newOperation.getDistanceStart();
+        }
+    }
+
+    public OperationResponse(OperationSearchResult searchResult, String unit) {
+        this.id = searchResult.getId();
+        this.brand = searchResult.getBrand();
+        this.model = searchResult.getModel();
+        this.engine = searchResult.getEngine();
+        this.approxCost = searchResult.getApproxCost();
+        this.yearEnd = searchResult.getYearEnd();
+        this.yearStart = searchResult.getYearStart();
+        this.name = searchResult.getName();
+        this.description = searchResult.getDescription();
+        this.time = searchResult.getTime();
+
+        if(unit.equalsIgnoreCase(DistanceUnit.MILES.getValue())) {
+            this.distanceStart = DistanceConversionUtil.toMiles(searchResult.getDistanceStart());
+            this.distanceEnd = DistanceConversionUtil.toMiles(searchResult.getDistanceEnd());
+        } else {
+            this.distanceEnd = searchResult.getDistanceEnd();
+            this.distanceStart = searchResult.getDistanceStart();
         }
     }
 }

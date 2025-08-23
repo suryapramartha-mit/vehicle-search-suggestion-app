@@ -8,7 +8,6 @@ import com.vehicle.suggestion.app.repository.OperationRepository;
 import com.vehicle.suggestion.app.util.DistanceConversionUtil;
 import com.vehicle.suggestion.app.util.TrigramUtils;
 import jakarta.validation.Valid;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -86,7 +85,7 @@ public class OperationService {
                 .stream()
                 .filter(p -> TrigramUtils.trigramMatch(p.getBrand(), request.getBrand())
                         && TrigramUtils.trigramMatch(p.getModel(), request.getModel()))
-                .map(res -> mapToOperationDTO(res, unit))
+                .map(res -> new OperationResponse(res, unit))
                 .toList();
         return OperationSearchResponse.builder()
                 .operationsList(convertedData)
@@ -105,29 +104,4 @@ public class OperationService {
         }
         return DistanceUnit.MILES.getValue().equalsIgnoreCase(unit) ? DistanceConversionUtil.toKm(distance) : distance;
     }
-
-    private OperationDTO mapToOperationDTO(OperationSearchResult data, String unit) {
-        var distanceStart = data.getDistanceStart();
-        var distanceEnd = data.getDistanceEnd();
-
-        if (DistanceUnit.MILES.getValue().equalsIgnoreCase(unit)) {
-            distanceStart = DistanceConversionUtil.toMiles(data.getDistanceStart());
-            distanceEnd = DistanceConversionUtil.toMiles(data.getDistanceEnd());
-        }
-        return OperationDTO.builder()
-                .id(data.getId())
-                .brand(data.getBrand())
-                .model(data.getModel())
-                .engine(data.getEngine())
-                .yearStart(data.getYearStart())
-                .yearEnd(data.getYearEnd())
-                .distanceStart(distanceStart)
-                .distanceEnd(distanceEnd)
-                .name(data.getName())
-                .description(data.getDescription())
-                .time(data.getTime())
-                .approxCost(data.getApproxCost())
-                .build();
-    }
-
 }

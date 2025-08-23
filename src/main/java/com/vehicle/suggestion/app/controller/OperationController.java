@@ -2,7 +2,6 @@ package com.vehicle.suggestion.app.controller;
 
 import com.vehicle.suggestion.app.dto.*;
 import com.vehicle.suggestion.app.entity.Operations;
-import com.vehicle.suggestion.app.enums.DistanceUnit;
 import com.vehicle.suggestion.app.service.OperationService;
 import com.vehicle.suggestion.app.util.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,22 +26,22 @@ public class OperationController {
     @PostMapping(produces = "application/json")
     @Operation(summary = "Create new Operation")
     @Tag(name = "Operation API")
-    public ResponseEntity<ApiResponse<CreateOperationResponse>> createOperation(@RequestBody @Valid CreateOperationRequest request,
-                                                                                @RequestParam(required = false, defaultValue = "km") String unit) {
+    public ResponseEntity<ApiResponse<OperationResponse>> createOperation(@RequestBody @Valid CreateOperationRequest request,
+                                                                          @RequestParam(required = false, defaultValue = "km") String unit) {
         var newOperation = operationService.createOperation(request, unit);
-        var response = new CreateOperationResponse(newOperation, unit);
+        var response = new OperationResponse(newOperation, unit);
         return ResponseEntity.ok(ApiResponse.success(response, "Operation created successfully"));
     }
 
     @PutMapping(value = "/{id}", produces = "application/json")
     @Operation(summary = "Update existing operation")
     @Tag(name = "Operation API")
-    public ResponseEntity<ApiResponse<CreateOperationResponse>> updateOperation(
+    public ResponseEntity<ApiResponse<OperationResponse>> updateOperation(
             @PathVariable Long id,
             @RequestBody UpdateOperationRequest request,
             @RequestParam(required = false, defaultValue = "km") String unit) {
         Operations updatedOperation = operationService.updateOperation(id, request, unit);
-        var response = new CreateOperationResponse(updatedOperation, unit);
+        var response = new OperationResponse(updatedOperation, unit);
         return ResponseEntity.ok(ApiResponse.success(response, "Operation updated successfully"));
     }
 

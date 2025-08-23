@@ -1,7 +1,5 @@
 package com.vehicle.suggestion.app.dto;
 
-import com.vehicle.suggestion.app.entity.Operations;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +11,6 @@ import java.util.List;
 @Builder
 @Getter
 public class OperationSearchResponse {
-    List<OperationDTO> operationsList;
+    List<OperationResponse> operationsList;
     Pageable pageable;
 }
