@@ -2,6 +2,7 @@ package com.vehicle.suggestion.app;
 
 import com.vehicle.suggestion.app.dto.*;
 import com.vehicle.suggestion.app.entity.Operations;
+import com.vehicle.suggestion.app.enums.DistanceUnit;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
 import com.vehicle.suggestion.app.service.OperationService;
@@ -61,7 +62,7 @@ class OperationServiceTest {
         when(operationRepository.save(any(Operations.class))).thenReturn(savedOperation);
 
 
-        Operations result = operationService.createOperation(request);
+        Operations result = operationService.createOperation(request, "km");
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -81,7 +82,7 @@ class OperationServiceTest {
         request.setEngine(engineTest);
         when(vehicleService.isVehicleExist(brandTest, modelTest, engineTest)).thenReturn(false);
 
-        DataNotFoundException exception = assertThrows(DataNotFoundException.class, () -> operationService.createOperation(request));
+        DataNotFoundException exception = assertThrows(DataNotFoundException.class, () -> operationService.createOperation(request, "km"));
 
         assertEquals("Vehicle not found", exception.getMessage());
         verify(vehicleService, times(1)).isVehicleExist(brandTest, modelTest, engineTest);
@@ -111,7 +112,7 @@ class OperationServiceTest {
         request.setDescription(descTest);
 
         when(operationRepository.save(any(Operations.class))).thenAnswer(i -> i.getArguments()[0]);
-        Operations updatedOperation = operationService.updateOperation(id, request);
+        Operations updatedOperation = operationService.updateOperation(id, request, DistanceUnit.KM.getValue());
 
         assertEquals(nameTest, updatedOperation.getName());
         assertEquals(approxCostTest, updatedOperation.getApproxCost());
@@ -128,7 +129,7 @@ class OperationServiceTest {
         UpdateOperationRequest request = new UpdateOperationRequest();
         request.setName("test name");
 
-        assertThrows(DataNotFoundException.class, () -> operationService.updateOperation(id, request));
+        assertThrows(DataNotFoundException.class, () -> operationService.updateOperation(id, request, DistanceUnit.KM.getValue()));
         verify(operationRepository, never()).save(any());
     }
 
@@ -159,7 +160,7 @@ class OperationServiceTest {
                 pageRequest
         )).thenReturn(testResult);
 
-        OperationSearchResponse response = operationService.searchOperation(request, pageRequest);
+        OperationSearchResponse response = operationService.searchOperation(request, DistanceUnit.KM.getValue(), pageRequest);
 
         assertNotNull(response);
         assertEquals(1, response.getOperationsList().size());

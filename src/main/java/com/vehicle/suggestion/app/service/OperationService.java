@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class OperationService {
@@ -24,19 +23,23 @@ public class OperationService {
         this.vehicleService = vehicleService;
     }
 
-    public Operations createOperation(@Valid CreateOperationRequest request) {
+    public Operations createOperation(@Valid CreateOperationRequest request, String unit) {
         var isVehicleExist = vehicleService.isVehicleExist(request.getBrand(), request.getModel(), request.getEngine());
         if (!isVehicleExist) {
             throw new DataNotFoundException("Vehicle not found");
         }
+
+        Double convertedDistanceStart = convertDistanceIfMilesToKm(request.getDistanceStart(), unit);
+        Double convertedDistanceEnd = convertDistanceIfMilesToKm(request.getDistanceEnd(), unit);
+
         return operationRepository.save(Operations.builder()
                 .brand(request.getBrand())
                 .model(request.getModel())
                 .engine(request.getEngine())
                 .yearEnd(request.getYearEnd())
                 .yearStart(request.getYearStart())
-                .distanceEnd(request.getDistanceEnd())
-                .distanceStart(request.getDistanceStart())
+                .distanceEnd(convertedDistanceEnd)
+                .distanceStart(convertedDistanceStart)
                 .approxCost(request.getApproxCost())
                 .description(request.getDescription())
                 .time(request.getTime())
@@ -44,27 +47,29 @@ public class OperationService {
                 .build());
     }
 
-    public Operations updateOperation(Long id, UpdateOperationRequest request) {
+
+    public Operations updateOperation(Long id, UpdateOperationRequest request, String unit) {
         Operations existingOperation = operationRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Operation not found with id: " + id));
+
+        Double convertedDistanceStart = convertDistanceIfMilesToKm(request.getDistanceStart(), unit);
+        Double convertedDistanceEnd = convertDistanceIfMilesToKm(request.getDistanceEnd(), unit);
 
         Optional.ofNullable(request.getName()).ifPresent(existingOperation::setName);
         Optional.ofNullable(request.getApproxCost()).ifPresent(existingOperation::setApproxCost);
         Optional.ofNullable(request.getDescription()).ifPresent(existingOperation::setDescription);
         Optional.ofNullable(request.getTime()).ifPresent(existingOperation::setTime);
-        Optional.ofNullable(request.getDistanceStart()).ifPresent(existingOperation::setDistanceStart);
-        Optional.ofNullable(request.getDistanceEnd()).ifPresent(existingOperation::setDistanceEnd);
+        Optional.ofNullable(convertedDistanceStart).ifPresent(existingOperation::setDistanceStart);
+        Optional.ofNullable(convertedDistanceEnd).ifPresent(existingOperation::setDistanceEnd);
         Optional.ofNullable(request.getYearStart()).ifPresent(existingOperation::setYearStart);
         Optional.ofNullable(request.getYearEnd()).ifPresent(existingOperation::setYearEnd);
 
         return operationRepository.save(existingOperation);
     }
 
-    public OperationSearchResponse searchOperation(OperationSearchRequest request, PageRequest pageRequest) {
-        String unit = StringUtils.defaultIfBlank(request.getUnit(), DistanceUnit.KM.getValue());
-
-        Double convertedDistanceStart = convertDistanceIfMiles(request.getDistanceStart(), unit);
-        Double convertedDistanceEnd = convertDistanceIfMiles(request.getDistanceEnd(), unit);
+    public OperationSearchResponse searchOperation(OperationSearchRequest request, String unit, PageRequest pageRequest) {
+        Double convertedDistanceStart = convertDistanceIfMilesToMiles(request.getDistanceStart(), unit);
+        Double convertedDistanceEnd = convertDistanceIfMilesToMiles(request.getDistanceEnd(), unit);
 
         var queryResult = operationRepository.searchOperations(
                 request.getBrand(),
@@ -85,11 +90,17 @@ public class OperationService {
                 .pageable(queryResult.getPageable()).build();
     }
 
-    private Double convertDistanceIfMiles(Double distance, String unit) {
+    private Double convertDistanceIfMilesToMiles(Double distance, String unit) {
         if (distance == null) {
             return null;
         }
         return DistanceUnit.MILES.getValue().equalsIgnoreCase(unit) ? DistanceConversionUtil.toMiles(distance) : distance;
+    }
+    private Double convertDistanceIfMilesToKm(Double distance, String unit) {
+        if (distance == null) {
+            return null;
+        }
+        return DistanceUnit.MILES.getValue().equalsIgnoreCase(unit) ? DistanceConversionUtil.toKm(distance) : distance;
     }
 
     private OperationDTO mapToOperationDTO(OperationSearchResult data, String unit) {

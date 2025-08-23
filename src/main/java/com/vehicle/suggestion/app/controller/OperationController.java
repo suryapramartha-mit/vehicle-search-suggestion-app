@@ -2,6 +2,7 @@ package com.vehicle.suggestion.app.controller;
 
 import com.vehicle.suggestion.app.dto.*;
 import com.vehicle.suggestion.app.entity.Operations;
+import com.vehicle.suggestion.app.enums.DistanceUnit;
 import com.vehicle.suggestion.app.service.OperationService;
 import com.vehicle.suggestion.app.util.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +27,10 @@ public class OperationController {
     @PostMapping(produces = "application/json")
     @Operation(summary = "Create new Operation")
     @Tag(name = "Operation API")
-    public ResponseEntity<ApiResponse<CreateOperationResponse>> createOperation(@RequestBody @Valid CreateOperationRequest request) {
-        var newOperation = operationService.createOperation(request);
-        var response = new CreateOperationResponse(newOperation);
+    public ResponseEntity<ApiResponse<CreateOperationResponse>> createOperation(@RequestBody @Valid CreateOperationRequest request,
+                                                                                @RequestParam(required = false, defaultValue = "km") String unit) {
+        var newOperation = operationService.createOperation(request, unit);
+        var response = new CreateOperationResponse(newOperation, unit);
         return ResponseEntity.ok(ApiResponse.success(response, "Operation created successfully"));
     }
 
@@ -37,9 +39,10 @@ public class OperationController {
     @Tag(name = "Operation API")
     public ResponseEntity<ApiResponse<CreateOperationResponse>> updateOperation(
             @PathVariable Long id,
-            @RequestBody UpdateOperationRequest request) {
-        Operations updatedOperation = operationService.updateOperation(id, request);
-        var response = new CreateOperationResponse(updatedOperation);
+            @RequestBody UpdateOperationRequest request,
+            @RequestParam(required = false, defaultValue = "km") String unit) {
+        Operations updatedOperation = operationService.updateOperation(id, request, unit);
+        var response = new CreateOperationResponse(updatedOperation, unit);
         return ResponseEntity.ok(ApiResponse.success(response, "Operation updated successfully"));
     }
 
@@ -48,10 +51,11 @@ public class OperationController {
     @Tag(name = "Operation API")
     public ResponseEntity<ApiResponse<OperationSearchResponse>> searchOperation(
             OperationSearchRequest request,
+            @RequestParam(required = false, defaultValue = "km") String unit,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        var result = operationService.searchOperation(request, PageRequest.of(page, size));
+        var result = operationService.searchOperation(request, unit, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(result, "Success"));
     }
 

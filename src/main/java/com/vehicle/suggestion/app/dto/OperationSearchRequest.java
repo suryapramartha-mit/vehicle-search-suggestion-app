@@ -13,5 +13,4 @@ public class OperationSearchRequest {
     private Integer yearEnd;
     private Double distanceStart;
     private Double distanceEnd;
-    private String unit; //default is km
 }
