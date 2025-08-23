@@ -1,11 +1,16 @@
 package com.vehicle.suggestion.app.entity;
 
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor
-public class Operation {
+@AllArgsConstructor
+@Table(name = "operation")
+@Builder
+@Getter
+@Setter
+public class Operations {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

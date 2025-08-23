@@ -1,6 +1,7 @@
 package com.vehicle.suggestion.app.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -8,6 +9,8 @@ import java.util.List;
 
 @Entity
 @NoArgsConstructor
+@Table(name = "vehicle")
+@Getter
 public class Vehicle {
 
     @Column(name = "id", nullable = false, unique = true)
@@ -33,6 +36,6 @@ public class Vehicle {
             @JoinColumn(name = "model", referencedColumnName = "model", insertable = false, updatable = false),
             @JoinColumn(name = "engine", referencedColumnName = "engine", insertable = false, updatable = false)
     })
-    private List<Operation> operations = new ArrayList<>();
+    private List<Operations> operations = new ArrayList<>();
 
 }

@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Setter
@@ -16,7 +15,7 @@ import java.util.List;
 public class ApiResponse<T> {
     private RestResponseDTO responseStatus;
     private T data;
-    private List<ErrorDTO> detailErrors = new ArrayList<>();
+    private List<ErrorDTO> detailErrors;
 
     public static <T> ApiResponse<T> success(T data, String message) {
         return new ApiResponse<>(
