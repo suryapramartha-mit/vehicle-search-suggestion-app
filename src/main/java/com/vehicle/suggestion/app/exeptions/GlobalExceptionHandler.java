@@ -9,7 +9,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
@@ -37,6 +40,14 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        List<ErrorDTO> errorResponse = new ArrayList<>();
+        errorResponse.add(new ErrorDTO("illegalArgument", ex.getMessage()));
+        ApiResponse<Object> response = ApiResponse.error(HttpStatus.BAD_REQUEST.value(), "illegalArgument", errorResponse);
+
+        return ResponseEntity.badRequest().body(response);
+    }
 
     // for all other exceptions
     @ExceptionHandler(Exception.class)

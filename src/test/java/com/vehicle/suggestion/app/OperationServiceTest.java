@@ -1,8 +1,6 @@
 package com.vehicle.suggestion.app;
 
-import com.vehicle.suggestion.app.dto.CreateOperationRequest;
-import com.vehicle.suggestion.app.dto.OperationSearchRequest;
-import com.vehicle.suggestion.app.dto.UpdateOperationRequest;
+import com.vehicle.suggestion.app.dto.*;
 import com.vehicle.suggestion.app.entity.Operations;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
@@ -147,8 +145,8 @@ class OperationServiceTest {
         request.setDistanceEnd(50000.0);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
-        Operations operation = new Operations();
-        Page<Operations> testResult = new PageImpl<>(List.of(operation));
+        OperationSearchResult operation = new OperationSearchResult();
+        Page<OperationSearchResult> testResult = new PageImpl<>(List.of(operation), pageRequest, 1);
 
         when(operationRepository.searchOperations(
                 request.getBrand(),
@@ -161,10 +159,10 @@ class OperationServiceTest {
                 pageRequest
         )).thenReturn(testResult);
 
-        Page<Operations> result = operationService.searchOperation(request, pageRequest);
+        OperationSearchResponse response = operationService.searchOperation(request, pageRequest);
 
-        // Assert only repo being hit since all query are handled by JPQL
-        assertThat(result).isEqualTo(testResult);
+        assertNotNull(response);
+        assertEquals(1, response.getOperationsList().size());
         verify(operationRepository, times(1)).searchOperations(
                 request.getBrand(),
                 request.getModel(),

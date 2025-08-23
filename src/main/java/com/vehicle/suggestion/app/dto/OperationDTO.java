@@ -1,11 +1,12 @@
 package com.vehicle.suggestion.app.dto;
 
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
-public class OperationSearchRequest {
+@Builder
+public class OperationDTO {
+    private Long id;
     private String brand;
     private String model;
     private String engine;
@@ -13,5 +14,8 @@ public class OperationSearchRequest {
     private Integer yearEnd;
     private Double distanceStart;
     private Double distanceEnd;
-    private String unit; //default is km
+    private String name;
+    private Double approxCost;
+    private String description;
+    private Integer time;
 }

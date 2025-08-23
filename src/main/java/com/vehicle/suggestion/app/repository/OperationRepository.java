@@ -1,5 +1,6 @@
 package com.vehicle.suggestion.app.repository;
 
+import com.vehicle.suggestion.app.dto.OperationSearchResult;
 import com.vehicle.suggestion.app.entity.Operations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,15 +23,15 @@ public interface OperationRepository extends JpaRepository<Operations, Long>, Jp
           AND (:engine IS NULL OR LOWER(o.engine) = LOWER(:engine))
           AND (:yearStart IS NULL OR o.yearStart = :yearStart)
           AND (:yearEnd IS NULL OR o.yearEnd = :yearEnd)
-          AND (:distanceStart IS NULL OR o.distanceStart = :distanceStart)
-          AND (:distanceEnd IS NULL OR o.distanceEnd = :distanceEnd)
+          AND (:distanceStart IS NULL OR o.distanceStart >= :distanceStart)
+          AND (:distanceEnd IS NULL OR o.distanceEnd <= :distanceEnd)
     """)
-    Page<Operations> searchOperations( @Param("brand") String brand,
-                                       @Param("model") String model,
-                                       @Param("engine") String engine,
-                                       @Param("yearStart") Integer yearStart,
-                                       @Param("yearEnd") Integer yearEnd,
-                                       @Param("distanceStart") Double distanceStart,
-                                       @Param("distanceEnd") Double distanceEnd,
-                                       Pageable pageable);
+    Page<OperationSearchResult> searchOperations(@Param("brand") String brand,
+                                                 @Param("model") String model,
+                                                 @Param("engine") String engine,
+                                                 @Param("yearStart") Integer yearStart,
+                                                 @Param("yearEnd") Integer yearEnd,
+                                                 @Param("distanceStart") Double distanceStart,
+                                                 @Param("distanceEnd") Double distanceEnd,
+                                                 Pageable pageable);
 }

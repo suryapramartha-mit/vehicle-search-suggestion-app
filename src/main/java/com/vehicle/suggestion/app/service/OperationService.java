@@ -1,22 +1,23 @@
 package com.vehicle.suggestion.app.service;
 
-import com.vehicle.suggestion.app.dto.CreateOperationRequest;
-import com.vehicle.suggestion.app.dto.OperationSearchRequest;
-import com.vehicle.suggestion.app.dto.UpdateOperationRequest;
+import com.vehicle.suggestion.app.dto.*;
 import com.vehicle.suggestion.app.entity.Operations;
+import com.vehicle.suggestion.app.enums.DistanceUnit;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
+import com.vehicle.suggestion.app.util.DistanceConversionUtil;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OperationService {
-    private OperationRepository operationRepository;
-    private VehicleService vehicleService;
+    private final OperationRepository operationRepository;
+    private final VehicleService vehicleService;
 
     public OperationService(OperationRepository operationRepository, VehicleService vehicleService) {
         this.operationRepository = operationRepository;
@@ -47,7 +48,6 @@ public class OperationService {
         Operations existingOperation = operationRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Operation not found with id: " + id));
 
-        // Update only fields that are provided
         Optional.ofNullable(request.getName()).ifPresent(existingOperation::setName);
         Optional.ofNullable(request.getApproxCost()).ifPresent(existingOperation::setApproxCost);
         Optional.ofNullable(request.getDescription()).ifPresent(existingOperation::setDescription);
@@ -60,15 +60,60 @@ public class OperationService {
         return operationRepository.save(existingOperation);
     }
 
-    public Page<Operations> searchOperation(OperationSearchRequest request, PageRequest pageRequest) {
-        return operationRepository.searchOperations(
+    public OperationSearchResponse searchOperation(OperationSearchRequest request, PageRequest pageRequest) {
+        String unit = StringUtils.defaultIfBlank(request.getUnit(), DistanceUnit.KM.getValue());
+
+        Double convertedDistanceStart = convertDistanceIfMiles(request.getDistanceStart(), unit);
+        Double convertedDistanceEnd = convertDistanceIfMiles(request.getDistanceEnd(), unit);
+
+        var queryResult = operationRepository.searchOperations(
                 request.getBrand(),
                 request.getModel(),
                 request.getEngine(),
                 request.getYearStart(),
                 request.getYearEnd(),
-                request.getDistanceStart(),
-                request.getDistanceEnd(),
+                convertedDistanceStart,
+                convertedDistanceEnd,
                 pageRequest);
+
+        var convertedData = queryResult.getContent()
+                .stream()
+                .map(res -> mapToOperationDTO(res, unit))
+                .toList();
+        return OperationSearchResponse.builder()
+                .operationsList(convertedData)
+                .pageable(queryResult.getPageable()).build();
     }
+
+    private Double convertDistanceIfMiles(Double distance, String unit) {
+        if (distance == null) {
+            return null;
+        }
+        return DistanceUnit.MILES.getValue().equalsIgnoreCase(unit) ? DistanceConversionUtil.toMiles(distance) : distance;
+    }
+
+    private OperationDTO mapToOperationDTO(OperationSearchResult data, String unit) {
+        var distanceStart = data.getDistanceStart();
+        var distanceEnd = data.getDistanceEnd();
+
+        if (DistanceUnit.MILES.getValue().equalsIgnoreCase(unit)) {
+            distanceStart = DistanceConversionUtil.toMiles(data.getDistanceStart());
+            distanceEnd = DistanceConversionUtil.toMiles(data.getDistanceEnd());
+        }
+        return OperationDTO.builder()
+                .id(data.getId())
+                .brand(data.getBrand())
+                .model(data.getModel())
+                .engine(data.getEngine())
+                .yearStart(data.getYearStart())
+                .yearEnd(data.getYearEnd())
+                .distanceStart(distanceStart)
+                .distanceEnd(distanceEnd)
+                .name(data.getName())
+                .description(data.getDescription())
+                .time(data.getTime())
+                .approxCost(data.getApproxCost())
+                .build();
+    }
+
 }
