@@ -1,11 +1,14 @@
 package com.vehicle.suggestion.app.service;
 
 import com.vehicle.suggestion.app.dto.CreateOperationRequest;
+import com.vehicle.suggestion.app.dto.OperationSearchRequest;
 import com.vehicle.suggestion.app.dto.UpdateOperationRequest;
 import com.vehicle.suggestion.app.entity.Operations;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -55,5 +58,17 @@ public class OperationService {
         Optional.ofNullable(request.getYearEnd()).ifPresent(existingOperation::setYearEnd);
 
         return operationRepository.save(existingOperation);
+    }
+
+    public Page<Operations> searchOperation(OperationSearchRequest request, PageRequest pageRequest) {
+        return operationRepository.searchOperations(
+                request.getBrand(),
+                request.getModel(),
+                request.getEngine(),
+                request.getYearStart(),
+                request.getYearEnd(),
+                request.getDistanceStart(),
+                request.getDistanceEnd(),
+                pageRequest);
     }
 }
