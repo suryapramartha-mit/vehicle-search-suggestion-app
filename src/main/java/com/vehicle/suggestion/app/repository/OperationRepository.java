@@ -18,8 +18,8 @@ public interface OperationRepository extends JpaRepository<Operations, Long>, Jp
             o.distanceStart, o.distanceEnd, o.name, o.approxCost, o.description, o.time
         )
         FROM Operations o
-        WHERE (:brand IS NULL OR LOWER(o.brand) = LOWER(:brand))
-          AND (:model IS NULL OR LOWER(o.model) = LOWER(:model))
+        WHERE (:brand IS NULL OR LOWER(o.brand) LIKE LOWER(CONCAT('%', :brand, '%')))
+          AND (:model IS NULL OR LOWER(o.model) LIKE LOWER(CONCAT('%', :model, '%')))
           AND (:engine IS NULL OR LOWER(o.engine) = LOWER(:engine))
           AND (:yearStart IS NULL OR o.yearStart = :yearStart)
           AND (:yearEnd IS NULL OR o.yearEnd = :yearEnd)

@@ -6,6 +6,7 @@ import com.vehicle.suggestion.app.enums.DistanceUnit;
 import com.vehicle.suggestion.app.exeptions.DataNotFoundException;
 import com.vehicle.suggestion.app.repository.OperationRepository;
 import com.vehicle.suggestion.app.util.DistanceConversionUtil;
+import com.vehicle.suggestion.app.util.TrigramUtils;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
@@ -72,8 +73,8 @@ public class OperationService {
         Double convertedDistanceEnd = convertDistanceIfMilesToMiles(request.getDistanceEnd(), unit);
 
         var queryResult = operationRepository.searchOperations(
-                request.getBrand(),
-                request.getModel(),
+                null,
+                null,
                 request.getEngine(),
                 request.getYearStart(),
                 request.getYearEnd(),
@@ -83,6 +84,8 @@ public class OperationService {
 
         var convertedData = queryResult.getContent()
                 .stream()
+                .filter(p -> TrigramUtils.trigramMatch(p.getBrand(), request.getBrand())
+                        && TrigramUtils.trigramMatch(p.getModel(), request.getModel()))
                 .map(res -> mapToOperationDTO(res, unit))
                 .toList();
         return OperationSearchResponse.builder()

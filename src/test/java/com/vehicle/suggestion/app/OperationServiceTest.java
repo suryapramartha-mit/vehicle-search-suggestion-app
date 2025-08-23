@@ -19,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -62,7 +61,7 @@ class OperationServiceTest {
         when(operationRepository.save(any(Operations.class))).thenReturn(savedOperation);
 
 
-        Operations result = operationService.createOperation(request, "km");
+        Operations result = operationService.createOperation(request, DistanceUnit.KM.getValue());
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -82,7 +81,7 @@ class OperationServiceTest {
         request.setEngine(engineTest);
         when(vehicleService.isVehicleExist(brandTest, modelTest, engineTest)).thenReturn(false);
 
-        DataNotFoundException exception = assertThrows(DataNotFoundException.class, () -> operationService.createOperation(request, "km"));
+        DataNotFoundException exception = assertThrows(DataNotFoundException.class, () -> operationService.createOperation(request, DistanceUnit.KM.getValue()));
 
         assertEquals("Vehicle not found", exception.getMessage());
         verify(vehicleService, times(1)).isVehicleExist(brandTest, modelTest, engineTest);
@@ -147,11 +146,13 @@ class OperationServiceTest {
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         OperationSearchResult operation = new OperationSearchResult();
+        operation.setBrand("Honda");
+        operation.setModel("Civic");
         Page<OperationSearchResult> testResult = new PageImpl<>(List.of(operation), pageRequest, 1);
 
         when(operationRepository.searchOperations(
-                request.getBrand(),
-                request.getModel(),
+                null,
+                null,
                 request.getEngine(),
                 request.getYearStart(),
                 request.getYearEnd(),
@@ -165,8 +166,8 @@ class OperationServiceTest {
         assertNotNull(response);
         assertEquals(1, response.getOperationsList().size());
         verify(operationRepository, times(1)).searchOperations(
-                request.getBrand(),
-                request.getModel(),
+                null,
+                null,
                 request.getEngine(),
                 request.getYearStart(),
                 request.getYearEnd(),
