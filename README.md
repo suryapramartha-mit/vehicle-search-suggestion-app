@@ -9,12 +9,13 @@ A Spring Boot application for Vehicle Service Search and Operation Suggestion.
 ### Installation & Running Locally
 Prerequisites
 - Java 17+
+- Spring Boot (latest stable version)
 - Maven
 - H2 Database (in-memory for testing)
 - Git
 
 Installation 
-- Clone the repository -
+- Clone the repository 
 - Build the app `mvn clean install`
 - Run application `mvn spring-boot:run`
 
