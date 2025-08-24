@@ -176,4 +176,111 @@ class OperationServiceTest {
                 pageRequest
         );
     }
+
+    //suggest operation
+    @Test
+    void suggestOperation_Success_ReturnBetweenRanges() {
+        prepareSuggestionData();
+
+        var request = new OperationSuggestRequest();
+        request.setBrand("Ford");
+        request.setModel("Bronco");
+        request.setEngine("2.7L EcoBoost");
+        request.setMakeYear(2022);
+        request.setTotalDistance(65000.0); // Between dataTest1 and dataTest2
+        String unit = "km";
+
+        List<OperationResponse> result = operationService.suggestOperations(request, unit);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void suggestOperation_Success_inRanges() {
+        prepareSuggestionData();
+
+        var request = new OperationSuggestRequest();
+        request.setBrand("Ford");
+        request.setModel("Bronco");
+        request.setEngine("2.7L EcoBoost");
+        request.setMakeYear(2022);
+        request.setTotalDistance(30000.0); // in range of dataTest1
+        String unit = "km";
+
+        List<OperationResponse> result = operationService.suggestOperations(request, unit);
+
+        assertEquals(1, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getId().equals(1L)));
+    }
+
+    @Test
+    void suggestOperation_Success_HighInRange() {
+        prepareSuggestionData();
+
+        var request = new OperationSuggestRequest();
+        request.setBrand("Ford");
+        request.setModel("Bronco");
+        request.setEngine("2.7L EcoBoost");
+        request.setMakeYear(2022);
+        request.setTotalDistance(300000.0); // above range of dataTest
+        String unit = "km";
+
+        List<OperationResponse> result = operationService.suggestOperations(request, unit);
+
+        assertEquals(1, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getId().equals(2L)));
+    }
+
+    @Test
+    void suggestOperation_Success_LowInRange() {
+        prepareSuggestionData();
+
+        var request = new OperationSuggestRequest();
+        request.setBrand("Ford");
+        request.setModel("Bronco");
+        request.setEngine("2.7L EcoBoost");
+        request.setMakeYear(2022);
+        request.setTotalDistance(10000.0); // below range of dataTest
+        String unit = "km";
+
+        List<OperationResponse> result = operationService.suggestOperations(request, unit);
+
+        assertEquals(1, result.size());
+        assertTrue(result.stream().anyMatch(p -> p.getId().equals(1L)));
+    }
+
+    @Test
+    void suggestOperation_Success_ReturnAll_IfNoDistance() {
+        prepareSuggestionData();
+
+        var request = new OperationSuggestRequest();
+        request.setBrand("Ford");
+        request.setModel("Bronco");
+        request.setEngine("2.7L EcoBoost");
+        request.setMakeYear(2022);
+        String unit = "km";
+
+        List<OperationResponse> result = operationService.suggestOperations(request, unit);
+
+        assertEquals(2, result.size());
+    }
+
+    private void prepareSuggestionData() {
+        OperationSearchResult dataTest1 = new OperationSearchResult();
+        dataTest1.setId(1L);
+        dataTest1.setDistanceStart(30000.0);
+        dataTest1.setDistanceEnd(60000.0);
+        dataTest1.setApproxCost(20.0);
+
+        OperationSearchResult dataTest2 = new OperationSearchResult();
+        dataTest2.setId(2L);
+        dataTest2.setDistanceStart(70000.0);
+        dataTest2.setDistanceEnd(120000.0);
+        dataTest2.setApproxCost(30.0);
+
+        List<OperationSearchResult> queryResult = List.of(dataTest1, dataTest2);
+
+        when(operationRepository.suggestOperations("Ford", "Bronco", "2.7L EcoBoost", 2022))
+                .thenReturn(queryResult);
+    }
 }
